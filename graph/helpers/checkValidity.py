@@ -1,34 +1,37 @@
-import io
-import sys
-
-def run_python_code(code_string: str, input_data=None):
-    """
-    Executes Python code from a string with input_data available as a variable.
-    Returns the 'result' variable if defined, otherwise printed output.
-    """
-    old_stdout = sys.stdout
-    sys.stdout = io.StringIO()
-    
-    try:
-        local_scope = {"input_data": input_data}
-        exec(code_string, {}, local_scope)
-        printed_output = sys.stdout.getvalue().strip()
-        result = local_scope.get("result", None)
-        
-        # Prefer result variable, else fallback to printed output
-        return result if result is not None else printed_output
-    except Exception as e:
-        return f"Error: {str(e)}"
-    finally:
-        sys.stdout = old_stdout
+import subprocess
 
 
-def checkValidity(user_code: str, baseline_code: str, test_case: str)->bool:
+def checkValidity(user_code: str, baseline_code: str)->bool:
     """
-    Run user_code and baseline_code against the same test_case.
+    Run user_code and baseline_code against the embedded test case.
     Return True if outputs differ, else False.
     """
-    user_output = run_python_code(user_code, test_case)
-    baseline_output = run_python_code(baseline_code, test_case)
-    print("The functions ran")
-    return user_output != baseline_output
+    print("___CHECKING VALIDITY OF USER VS BASELINE CODE AGAINST THE GENERATED TEST CASE___")
+
+    # Run user code in a subprocess
+    user_process = subprocess.run(
+        ["python3", "-c", user_code],
+        text=True,
+        capture_output=True
+    )
+
+    # Run baseline code in a subprocess and capture it's output stream
+    baseline_process = subprocess.run(
+        ["python3", "-c", baseline_code],
+        text=True,
+        capture_output=True
+    )
+    
+    # Print output of both the process
+    if user_process.stderr is None:    
+        print("User code output", user_process.stdout)
+    else:
+        print(user_process.stderr)
+
+    
+    if baseline_process.stderr is None:
+        print("Baseline code output", baseline_process.stdout)
+    else:
+        print(baseline_process.stderr)
+
+    return user_process.stdout != baseline_process.stdout

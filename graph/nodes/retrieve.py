@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from graph.state import GraphState
 from graph.chains import code_extractor
+from graph.consts import RETRIEVE
 
 def retrieve(state: GraphState) -> Dict[str, Any]:
     print("--- RETRIEVAL PHASE ---")
@@ -11,4 +12,5 @@ def retrieve(state: GraphState) -> Dict[str, Any]:
 
     return {**state,"question": question, "user_code": structuredOutput.user_code, "language": structuredOutput.code_language, 
             "baseline_code": structuredOutput.baseline_code,
-            "failing_tc": structuredOutput.failing_tc}
+            "failing_tc": structuredOutput.failing_tc,
+            "last_caller": RETRIEVE}

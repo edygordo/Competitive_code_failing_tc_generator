@@ -1,3 +1,6 @@
 RETRIEVE = "retrieve"
 FAILING_TC_GENERATION = "failing_tc_generation"
 SIMPLIFY_TC = "simplify_tc"
+REPHRASER_CODE_STRING = "rephrase_code_string"
+CHECK_VALIDITY = "check_validity"
+EXPLAIN_TEST_CASE = "explain_test_case"
