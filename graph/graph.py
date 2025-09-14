@@ -1,9 +1,8 @@
 from dotenv import load_dotenv
-from langgraph.graph import END, StateGraph, START
+from langgraph.graph import END, StateGraph
 from graph.consts import RETRIEVE, SIMPLIFY_TC, FAILING_TC_GENERATION, REPHRASER_CODE_STRING, CHECK_VALIDITY, EXPLAIN_TEST_CASE
 from graph.nodes import retrieve, generate_failing_tc, simplify_failing_tc, rephraser_tc_for_subprocess, validate_test_case, final_explanation
 from graph.state import GraphState
-from graph.helpers import checkValidity
 
 load_dotenv()
 
@@ -32,10 +31,10 @@ def decide_to_verify_or_simplify_or_regenerate(state:GraphState)->str:
 
 def decide_to_verify_explain_regenerate(state:GraphState)->str:
     print("---SHOULD WE REGENERATE OR VERIFY OR PROCEED WITH EXPLAINATION---")
-    if state.get("failing_tc") == "EMPTY" or (state.get("valid_tc") == False and state.get("verified_failing_tc") == True):
+    if state.get("failing_tc") == "EMPTY" or (state.get("valid_tc") == False and state.get("verified_simplified_tc") == True):
         print("--REGENERATING TEST CASE AS TEST CASE PRODUCED NOT VALID OR EMPTY!--")
         return SIMPLIFY_TC
-    elif state.get("verified_failing_tc") == False:
+    elif state.get("verified_simplified_tc") == False:
         print("--VERIFYING FAILING TEST CASE--")
         return CHECK_VALIDITY
     else:

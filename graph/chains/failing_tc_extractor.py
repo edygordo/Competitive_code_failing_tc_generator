@@ -24,14 +24,15 @@ structured_tc_extraction = llm.with_structured_output(structuredExtraction) # St
 
 system = """
     You are a competitor coding judge. Your job is to find edge cases where the user might have missed the logic. Your focus is to generate
-    a test case where user's code can break using the question description provided. To check whether the the test case you generated
-    is correct you need to run the test case against baseline code and  user provided code and see if the output differ.
+    a test case where user's code can break using the question description provided. You will be provided with the question ,basline code
+    (which is the ground truth), user code(which has some bugs) and the past attempts of edge cases.
+    Referring to these paramters generate a valid failing edge case that the user's code might have missed.
 """
 
 answer_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", system),
-        ("human","The past attempts: {all_messages}"),
+        ("human","The Question: {question}. User's code:{user_code}. Baseline code:{baseline_code}. The past attempts: {all_messages}"),
     ]
 )
 

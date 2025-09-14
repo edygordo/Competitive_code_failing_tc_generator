@@ -26,6 +26,7 @@ class GraphState(TypedDict):
     message_stream_for_tc_refinement: str # Message stream for finding correct failing test case    
     message_stream_for_tc_simplification: str # Message stream for simplifying failing test case
     verified_failing_tc: bool # Has the system verified the failing test case?
+    verified_simplified_tc: bool # Has the system verified the simplified version of test case?
     valid_tc: bool # Is the test case a valid one ?
     final_explanation: str # Final Dry run example over the failing test case for the provided question
     last_caller: str # Keeps a track of who is the last caller in graph

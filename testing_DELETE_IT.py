@@ -27,5 +27,28 @@ agent = initialize_agent(
     handle_parsing_errors=True
 )
 
-response = agent.invoke("What is 3*4?")
-print(response['output'])
+# response = agent.invoke("What is 3*4?")
+# print(response['output'])
+
+# Min num of platforms
+def findPlatform(Arrival, Departure):
+
+    arr_sorted = sorted(Arrival,reverse=False) # Ascending order
+    dep_sorted = sorted(Departure, reverse=False) # Descending order
+
+    i,j=0,0
+    count = 0
+    max_count = -1
+
+    while i<len(arr_sorted) and j<len(dep_sorted):
+        if arr_sorted[i] <= dep_sorted[j]:
+            i +=1
+            count +=1
+            max_count = max(max_count, count)
+        else:
+            j +=1
+            count -=1
+
+    return max_count
+
+print(findPlatform(Arrival=[900, 940, 950, 1100, 1500, 1800], Departure=[910, 1200, 1120, 1130, 1900, 2000]))

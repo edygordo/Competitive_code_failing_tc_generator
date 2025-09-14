@@ -7,7 +7,7 @@ def checkValidity(user_code: str, baseline_code: str)->bool:
     Return True if outputs differ, else False.
     """
     print("___CHECKING VALIDITY OF USER VS BASELINE CODE AGAINST THE GENERATED TEST CASE___")
-
+    print("User code python sub-process is trying to run: ", user_code)
     # Run user code in a subprocess
     user_process = subprocess.run(
         ["python3", "-c", user_code],

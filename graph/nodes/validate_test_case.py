@@ -20,5 +20,4 @@ def validate_test_case(state: GraphState)->Dict[str,Any]:
     else:
         valid_failing_tc = False
 
-    return {**state, 'valid_tc': valid_failing_tc, 'verified_failing_tc': True,
-            "last_caller": CHECK_VALIDITY} # Always make the verified True
+    return {**state, 'valid_tc': valid_failing_tc, 'verified_failing_tc': True, 'verified_simplified_tc': True} # Always make the verified True
