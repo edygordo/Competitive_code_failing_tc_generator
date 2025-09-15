@@ -3,11 +3,19 @@ from langchain_core.runnables import RunnableSequence
 from pydantic import BaseModel, Field
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
+import os
+from dotenv import load_dotenv
+
+# Go up two levels
+dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+load_dotenv(dotenv_path)
+
+google_api_key = os.getenv("GEMINI_API_KEY")
 
 # llm = ChatOllama(model="llama3.2:1b")
 
 # Manually pull the environment key and provide it
-google_api_key = "AIzaSyBD8l7uBiooJGzy0J4FCPtEl0jn9sfarAU"
+
 
 if not google_api_key:
     raise ValueError("GOOGLE_API_KEY environment variable not set")

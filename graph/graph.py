@@ -50,7 +50,6 @@ workflow = StateGraph(GraphState)
 workflow.add_node(RETRIEVE, retrieve)
 workflow.add_node(FAILING_TC_GENERATION, generate_failing_tc)
 workflow.add_node(SIMPLIFY_TC, simplify_failing_tc)
-workflow.add_node(REPHRASER_CODE_STRING, rephraser_tc_for_subprocess)
 workflow.add_node(CHECK_VALIDITY, validate_test_case)
 workflow.add_node(EXPLAIN_TEST_CASE, final_explanation)
 

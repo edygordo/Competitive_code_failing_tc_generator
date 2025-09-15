@@ -1,4 +1,4 @@
-from typing import List, TypedDict
+from typing import TypedDict
 
 
 class GraphState(TypedDict):
@@ -16,9 +16,6 @@ class GraphState(TypedDict):
     user_code: str # User provided code
     language: str # Language of code(Python, java, c++,c)
     baseline_code: str # Correct version of code
-    generation: str
-    web_search: bool
-    documents: List[str]
     failing_tc: str # Failing test case (where output of baseline code and user code differs)
     simplified_tc_explanation: str # Dry run of simplified failing test case
     user_reframed_code_with_tc: str # code string ready to go to subprocess module
