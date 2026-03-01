@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Failing Test Case Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Failing Test Case Analyzer</h1>
+        <p class="tagline">Why spend hours on decoding which test case failed in your code? <br />Use our site's feature and let LLM automate that finding for you!</p>
+
+        <form id="demo-form">
+            <label for="question">Question / Problem Statement</label>
+            <textarea id="question" name="question" rows="2" required></textarea>
+
+            <label for="baseline_code">Correct (Baseline) Code</label>
+            <textarea id="baseline_code" name="baseline_code" rows="6" required></textarea>
+
+            <label for="user_code">Your Code</label>
+            <textarea id="user_code" name="user_code" rows="6" required></textarea>
+
+            <button type="submit">Analyze</button>
+        </form>
+
+        <div id="result" class="result-area"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('demo-form');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultDiv.innerHTML = '<p class="loading">Processing... This may take a minute.</p>';
+
+            const data = {
+                question: form.question.value,
+                baseline_code: form.baseline_code.value,
+                user_code: form.user_code.value,
+            };
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                const json = await response.json();
+                
+                // Parse and display only relevant fields
+                displayResults(json);
+            } catch (err) {
+                resultDiv.innerHTML = '<p class="error">Error: ' + err.message + '</p>';
+            }
+        });
+
+        function displayResults(data) {
+            let html = '<div class="results-wrapper">';
+
+            // Question section
+            if (data.question) {
+                html += `<div class="result-section">
+                    <h3>Question</h3>
+                    <div class="result-field">${escapeHtml(data.question)}</div>
+                </div>`;
+            }
+
+            // Failing Test Case section
+            if (data.failing_tc) {
+                html += `<div class="result-section">
+                    <h3>Failing Test Case</h3>
+                    <div class="result-field">${escapeHtml(data.failing_tc)}</div>
+                </div>`;
+            }
+
+            // Status indicators (boolean fields)
+            html += '<div class="result-section status-section">';
+            html += '<h3>Analysis Status</h3>';
+            html += '<div class="status-row">';
+
+            if (data.verified_failing_tc !== undefined) {
+                html += `<div class="status-item">
+                    <label>Failing TC Verified:</label>
+                    <button class="status-btn ${data.verified_failing_tc ? 'success' : 'error'}">${data.verified_failing_tc ? '✓ Yes' : '✗ No'}</button>
+                </div>`;
+            }
+
+            if (data.verified_simplified_tc !== undefined) {
+                html += `<div class="status-item">
+                    <label>Simplified TC Verified:</label>
+                    <button class="status-btn ${data.verified_simplified_tc ? 'success' : 'error'}">${data.verified_simplified_tc ? '✓ Yes' : '✗ No'}</button>
+                </div>`;
+            }
+
+            if (data.valid_tc !== undefined) {
+                html += `<div class="status-item">
+                    <label>Valid Test Case:</label>
+                    <button class="status-btn ${data.valid_tc ? 'success' : 'error'}">${data.valid_tc ? '✓ Yes' : '✗ No'}</button>
+                </div>`;
+            }
+
+            html += '</div></div>';
+
+            // Final Explanation (prominent section) - prefer parsed_explanation
+            if (data.parsed_explanation && Array.isArray(data.parsed_explanation) && data.parsed_explanation.length > 0) {
+                html += `<div class="result-section explanation-section">
+                    <h2>Explanation</h2>
+                    <div class="explanation-content" id="explanation-content"></div>
+                </div>`;
+            } else if (data.final_explanation) {
+                html += `<div class="result-section explanation-section">
+                    <h2>Explanation</h2>
+                    <div class="explanation-content">${escapeHtml(data.final_explanation).replace(/\n/g, '<br>')}</div>
+                </div>`;
+            }
+
+            html += '</div>';
+            resultDiv.innerHTML = html;
+
+            // render parsed explanation blocks if present
+            if (data.parsed_explanation && Array.isArray(data.parsed_explanation)) {
+                const container = document.getElementById('explanation-content');
+                if (container) {
+                    container.innerHTML = renderBlocks(data.parsed_explanation);
+                    // add interaction: arrow chips clickable
+                    container.querySelectorAll('.arrow-chip').forEach(chip => {
+                        chip.addEventListener('click', () => {
+                            container.querySelectorAll('.arrow-chip').forEach(c=>c.classList.remove('active'));
+                            chip.classList.add('active');
+                        })
+                    });
+                }
+            }
+        }
+
+        function renderBlocks(blocks) {
+            let out = '';
+            for (const b of blocks) {
+                if (b.type === 'heading') {
+                    out += `<h3>${renderInline(b.inline)}</h3>`;
+                } else if (b.type === 'subheading') {
+                    out += `<h4 style="margin-top:0.25rem;color:#444">${renderInline(b.inline)}</h4>`;
+                } else if (b.type === 'paragraph') {
+                    out += `<div class="para">${renderInline(b.inline).replace(/\n/g,'<br>')}</div>`;
+                } else if (b.type === 'bullet_list' || b.type === 'ordered_list') {
+                    const tag = b.type === 'ordered_list' ? 'ol' : 'ul';
+                    out += `<${tag}>`;
+                    for (const item of b.items) {
+                        out += `<li>${renderInline(item.inline)}</li>`;
+                    }
+                    out += `</${tag}>`;
+                } else if (b.type === 'arrow_line') {
+                    out += `<div class="arrow-line">`;
+                    b.steps.forEach((step, idx) => {
+                        out += `<span class="arrow-chip" data-idx="${idx}">${renderInline(step)}</span>`;
+                        if (idx < b.steps.length-1) out += `<span class="arrow-sep">→</span>`;
+                    });
+                    out += `</div>`;
+                }
+            }
+            return out;
+        }
+
+        function renderInline(inlineSegments) {
+            if (!Array.isArray(inlineSegments)) return '';
+            let html = '';
+            for (const seg of inlineSegments) {
+                if (seg.type === 'bold') {
+                    html += `<strong>${escapeHtml(seg.text)}</strong>`;
+                } else {
+                    html += escapeHtml(seg.text);
+                }
+            }
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
