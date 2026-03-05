@@ -92,6 +92,10 @@ uvicorn api:api --host 0.0.0.0 --port 8000
 - Open your browser to `http://localhost:8000` for the demo web interface.
 - API documentation is available at `http://localhost:8000/docs` (Swagger UI) or `http://localhost:8000/redoc`.
 
+### Live Demo
+
+Try the application online: [https://verifiend-failing-test-case-generator.onrender.com/](https://verifiend-failing-test-case-generator.onrender.com/)
+
 ### Using the API
 
 Send a POST request to `/analyze` with JSON payload:
