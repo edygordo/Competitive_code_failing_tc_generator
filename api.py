@@ -33,6 +33,12 @@ def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@api.get("/documentation", response_class=HTMLResponse)
+def docs_page(request: Request):
+    """Serve a static documentation page describing the API."""
+    return templates.TemplateResponse("docs.html", {"request": request})
+
+
 @api.post("/analyze")
 def analyze(req: AnalyzeRequest):
     """Run the graph workflow and return the resulting state."""

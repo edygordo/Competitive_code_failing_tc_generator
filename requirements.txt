@@ -1,0 +1,13 @@
+fastapi>=0.116.1
+uvicorn[standard]>=0.35.0
+jinja2
+python-dotenv
+langchain
+langgraph
+langchain-google-genai
+langchain-ollama
+langchain-chroma
+beautifulsoup4
+numpy
+pytest
+# add any other dependencies from pyproject.toml if required

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Documentation - Failing Test Case Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+        .doc-container { max-width: 800px; margin: 3rem auto; padding: 2rem; background:#fff; border-radius:8px; }
+        h1, h2, h3 { color: #667eea; }
+        pre { background:#f4f4f4; padding:1rem; border-radius:4px; overflow-x:auto; }
+        code { font-family: monospace; color:#d6336c; }
+    </style>
+</head>
+<body>
+    <div class="doc-container">
+        <h1>Failing Test Case Analyzer API</h1>
+        <p>Welcome to the developer documentation for the Failing Test Case Analyzer.</p>
+
+        <h2>Base URL</h2>
+        <p><code>/</code> (served by FastAPI). Use the demo form or call the endpoints directly.</p>
+
+        <h2>Endpoints</h2>
+
+        <h3>GET /</h3>
+        <p>Returns the demo web page with form and frontend interface.</p>
+
+        <h3>POST /analyze</h3>
+        <p>Analyze provided question and code, returning a state object including generated failing test case and explanation.</p>
+        <h4>Request JSON</h4>
+        <pre>{
+  "question": "string",
+  "user_code": "string",
+  "baseline_code": "string",
+  "failing_tc": "string (optional)"
+}</pre>
+        <h4>Response JSON</h4>
+        <p>The response echoes most request fields and adds analysis results. Key fields include:</p>
+        <ul>
+            <li><strong>failing_tc</strong>: generated or provided failing test case</li>
+            <li><strong>verified_failing_tc</strong>, <strong>verified_simplified_tc</strong>, <strong>valid_tc</strong>: boolean flags (true/false)</li>
+            <li><strong>final_explanation</strong>: raw explanation string from LLM</li>
+            <li><strong>parsed_explanation</strong>: structured representation for frontend rendering</li>
+        </ul>
+        <p>Example response:</p>
+        <pre>{
+  "question": "Print hello world ?",
+  "user_code": "...",
+  "baseline_code": "...",
+  "failing_tc": "No specific input is needed, ...",
+  "verified_failing_tc": true,
+  "valid_tc": true,
+  "final_explanation": "<string>",
+  "parsed_explanation": [ ... structured blocks ... ]
+}</pre>
+        <p>Unused fields (hidden in the demo) include <code>language</code>, <code>message_stream_for_tc_refinement</code>, and <code>last_caller</code>.</p>
+
+        <h3>GET /documentation</h3>
+        <p>This page you are reading now. Provides a human-friendly view of the API.</p>
+
+        <h2>Interactive Swagger & Redoc</h2>
+        <p>FastAPI also exposes OpenAPI docs at <a href="/docs">/docs</a> (Swagger UI) and <a href="/redoc">/redoc</a>.</p>
+
+        <h2>Building and Running</h2>
+        <p>See the repository <code>README.md</code> for Docker instructions.</p>
+    </div>
+</body>
+</html>
