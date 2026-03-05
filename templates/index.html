@@ -3,37 +3,178 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Failing Test Case Analyzer</title>
+    <title>Failing Test Case Analyzer | Debug Your Competitive Code</title>
     <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Failing Test Case Analyzer</h1>
-        <p class="tagline">Why spend hours on decoding which test case failed in your code? <br />Use our site's feature and let LLM automate that finding for you!</p>
+    <div class="main-layout">
+        <!-- Left Section: Input Form -->
+        <div class="input-section">
+            <div class="input-container">
+                <div class="header">
+                    <h1>Debug Your Code</h1>
+                    <p class="subtitle">Compare your solution against baseline code and get AI-powered insights on what went wrong.</p>
+                </div>
 
-        <form id="demo-form">
-            <label for="question">Question / Problem Statement</label>
-            <textarea id="question" name="question" rows="2" required></textarea>
+                <form id="demo-form">
+                    <!-- Question Input -->
+                    <div class="form-group">
+                        <label for="question">
+                            <span class="label-text">Problem Statement</span>
+                            <span class="char-count" id="question-count">0</span>
+                        </label>
+                        <div class="textarea-wrapper">
+                            <textarea 
+                                id="question" 
+                                name="question" 
+                                class="expandable-textarea"
+                                placeholder="Paste the problem statement here..."
+                                required>
+                            </textarea>
+                            <div class="expandable-actions" id="question-actions" style="display: none;">
+                                <button type="button" class="show-more-btn" data-target="question">Show Less</button>
+                            </div>
+                        </div>
+                    </div>
 
-            <label for="baseline_code">Correct (Baseline) Code</label>
-            <textarea id="baseline_code" name="baseline_code" rows="6" required></textarea>
+                    <!-- Baseline Code Input -->
+                    <div class="form-group">
+                        <label for="baseline_code">
+                            <span class="label-text">Correct (Baseline) Code</span>
+                            <span class="char-count" id="baseline-count">0</span>
+                        </label>
+                        <div class="textarea-wrapper">
+                            <textarea 
+                                id="baseline_code" 
+                                name="baseline_code" 
+                                class="expandable-textarea code-textarea"
+                                placeholder="Paste the correct solution here..."
+                                required>
+                            </textarea>
+                            <div class="expandable-actions" id="baseline-actions" style="display: none;">
+                                <button type="button" class="show-more-btn" data-target="baseline_code">Show Less</button>
+                            </div>
+                        </div>
+                    </div>
 
-            <label for="user_code">Your Code</label>
-            <textarea id="user_code" name="user_code" rows="6" required></textarea>
+                    <!-- User Code Input -->
+                    <div class="form-group">
+                        <label for="user_code">
+                            <span class="label-text">Your Code</span>
+                            <span class="char-count" id="user-count">0</span>
+                        </label>
+                        <div class="textarea-wrapper">
+                            <textarea 
+                                id="user_code" 
+                                name="user_code" 
+                                class="expandable-textarea code-textarea"
+                                placeholder="Paste your solution here..."
+                                required>
+                            </textarea>
+                            <div class="expandable-actions" id="user-actions" style="display: none;">
+                                <button type="button" class="show-more-btn" data-target="user_code">Show Less</button>
+                            </div>
+                        </div>
+                    </div>
 
-            <button type="submit">Analyze</button>
-        </form>
+                    <button type="submit" class="analyze-btn" id="analyze-btn">
+                        <span class="btn-text">Analyze Code</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </form>
+            </div>
+        </div>
 
-        <div id="result" class="result-area"></div>
+        <!-- Right Section: Output Area -->
+        <div class="output-section">
+            <div class="output-container">
+                <!-- Streaming Output Area -->
+                <div id="streaming-area" class="streaming-area" style="display: none;">
+                    <div class="streaming-header">
+                        <h2>Processing...</h2>
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="stream-output" class="stream-output">
+                        <p class="stream-message">Analyzing your code with AI...</p>
+                    </div>
+                </div>
+
+                <!-- Results Area -->
+                <div id="result" class="result-area"></div>
+            </div>
+        </div>
     </div>
 
     <script>
         const form = document.getElementById('demo-form');
         const resultDiv = document.getElementById('result');
+        const streamingArea = document.getElementById('streaming-area');
+        const streamOutput = document.getElementById('stream-output');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const inputSection = document.querySelector('.input-section');
+        const outputSection = document.querySelector('.output-section');
 
+        // Character count and expandable textarea logic
+        document.querySelectorAll('.expandable-textarea').forEach(textarea => {
+            const textareaId = textarea.id;
+            const countEl = document.getElementById(textareaId.replace('_', '-') + '-count');
+            const actionsId = textareaId + '-actions';
+            const actionsEl = document.getElementById(actionsId);
+            const MAX_COLLAPSED_HEIGHT = 150; // pixels
+
+            function updateCharCount() {
+                if (countEl) countEl.textContent = textarea.value.length;
+            }
+
+            function checkExpandable() {
+                if (textarea.scrollHeight > MAX_COLLAPSED_HEIGHT) {
+                    textarea.classList.add('collapsed');
+                    if (actionsEl) actionsEl.style.display = 'block';
+                } else {
+                    textarea.classList.remove('collapsed');
+                    if (actionsEl) actionsEl.style.display = 'none';
+                }
+            }
+
+            textarea.addEventListener('input', () => {
+                updateCharCount();
+                checkExpandable();
+            });
+
+            updateCharCount();
+            setTimeout(checkExpandable, 100);
+        });
+
+        // Show More / Show Less functionality
+        document.querySelectorAll('.show-more-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = btn.getAttribute('data-target');
+                const textarea = document.getElementById(targetId);
+                const isCollapsed = textarea.classList.contains('collapsed');
+                
+                if (isCollapsed) {
+                    textarea.classList.remove('collapsed');
+                    btn.textContent = 'Show Less';
+                } else {
+                    textarea.classList.add('collapsed');
+                    btn.textContent = 'Show More';
+                }
+            });
+        });
+
+        // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            resultDiv.innerHTML = '<p class="loading">Processing... This may take a minute.</p>';
+            
+            // Show streaming area and scroll to it
+            streamingArea.style.display = 'block';
+            resultDiv.innerHTML = '';
+            
+            // Smooth scroll to streaming area
+            setTimeout(() => {
+                streamingArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
 
             const data = {
                 question: form.question.value,
@@ -41,18 +182,66 @@
                 user_code: form.user_code.value,
             };
 
+            // Simulate streaming messages
+            const streamMessages = [
+                '🔍 Validating Python syntax...',
+                '⚙️ Setting up analysis pipeline...',
+                '🤖 Running LLM analysis...',
+                '📊 Extracting failing test cases...',
+                '✨ Generating explanation...',
+                '🎯 Finalizing results...'
+            ];
+
+            let msgIndex = 0;
+            const msgInterval = setInterval(() => {
+                if (msgIndex < streamMessages.length) {
+                    const msg = streamMessages[msgIndex];
+                    const msgEl = document.createElement('p');
+                    msgEl.className = 'stream-message';
+                    msgEl.textContent = msg;
+                    streamOutput.appendChild(msgEl);
+                    msgIndex++;
+                } else {
+                    clearInterval(msgInterval);
+                }
+            }, 800);
+
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 });
+
                 const json = await response.json();
-                
-                // Parse and display only relevant fields
-                displayResults(json);
+
+                // Check for errors
+                if (!response.ok || json.error) {
+                    clearInterval(msgInterval);
+                    streamOutput.innerHTML = '';
+                    const errorEl = document.createElement('div');
+                    errorEl.className = 'stream-error';
+                    errorEl.innerHTML = `
+                        <p class="error-title">❌ ${json.error}</p>
+                        <p class="error-msg">${json.message}</p>
+                    `;
+                    streamOutput.appendChild(errorEl);
+                    return;
+                }
+
+                // Hide streaming and show results after a brief delay
+                clearInterval(msgInterval);
+                setTimeout(() => {
+                    streamingArea.style.display = 'none';
+                    displayResults(json);
+                }, 1000);
             } catch (err) {
-                resultDiv.innerHTML = '<p class="error">Error: ' + err.message + '</p>';
+                clearInterval(msgInterval);
+                streamOutput.innerHTML = '';
+                const errorEl = document.createElement('div');
+                errorEl.className = 'stream-error';
+                errorEl.innerHTML = `<p class="error-title">❌ Error: ${err.message}</p>`;
+                streamOutput.appendChild(errorEl);
             }
         });
 
@@ -62,7 +251,7 @@
             // Question section
             if (data.question) {
                 html += `<div class="result-section">
-                    <h3>Question</h3>
+                    <h3 class="result-heading">Problem Statement</h3>
                     <div class="result-field">${escapeHtml(data.question)}</div>
                 </div>`;
             }
@@ -70,48 +259,48 @@
             // Failing Test Case section
             if (data.failing_tc) {
                 html += `<div class="result-section">
-                    <h3>Failing Test Case</h3>
-                    <div class="result-field">${escapeHtml(data.failing_tc)}</div>
+                    <h3 class="result-heading">Failing Test Case</h3>
+                    <div class="result-field code-block">${escapeHtml(data.failing_tc)}</div>
                 </div>`;
             }
 
-            // Status indicators (boolean fields)
+            // Status indicators
             html += '<div class="result-section status-section">';
-            html += '<h3>Analysis Status</h3>';
+            html += '<h3 class="result-heading">Analysis Status</h3>';
             html += '<div class="status-row">';
 
             if (data.verified_failing_tc !== undefined) {
                 html += `<div class="status-item">
-                    <label>Failing TC Verified:</label>
-                    <button class="status-btn ${data.verified_failing_tc ? 'success' : 'error'}">${data.verified_failing_tc ? '✓ Yes' : '✗ No'}</button>
+                    <span class="status-label">Failing TC Verified:</span>
+                    <span class="status-badge ${data.verified_failing_tc ? 'success' : 'error'}">${data.verified_failing_tc ? '✓ Yes' : '✗ No'}</span>
                 </div>`;
             }
 
             if (data.verified_simplified_tc !== undefined) {
                 html += `<div class="status-item">
-                    <label>Simplified TC Verified:</label>
-                    <button class="status-btn ${data.verified_simplified_tc ? 'success' : 'error'}">${data.verified_simplified_tc ? '✓ Yes' : '✗ No'}</button>
+                    <span class="status-label">Simplified TC Verified:</span>
+                    <span class="status-badge ${data.verified_simplified_tc ? 'success' : 'error'}">${data.verified_simplified_tc ? '✓ Yes' : '✗ No'}</span>
                 </div>`;
             }
 
             if (data.valid_tc !== undefined) {
                 html += `<div class="status-item">
-                    <label>Valid Test Case:</label>
-                    <button class="status-btn ${data.valid_tc ? 'success' : 'error'}">${data.valid_tc ? '✓ Yes' : '✗ No'}</button>
+                    <span class="status-label">Valid Test Case:</span>
+                    <span class="status-badge ${data.valid_tc ? 'success' : 'error'}">${data.valid_tc ? '✓ Yes' : '✗ No'}</span>
                 </div>`;
             }
 
             html += '</div></div>';
 
-            // Final Explanation (prominent section) - prefer parsed_explanation
+            // Final Explanation
             if (data.parsed_explanation && Array.isArray(data.parsed_explanation) && data.parsed_explanation.length > 0) {
                 html += `<div class="result-section explanation-section">
-                    <h2>Explanation</h2>
+                    <h2 class="explanation-heading">Explanation</h2>
                     <div class="explanation-content" id="explanation-content"></div>
                 </div>`;
             } else if (data.final_explanation) {
                 html += `<div class="result-section explanation-section">
-                    <h2>Explanation</h2>
+                    <h2 class="explanation-heading">Explanation</h2>
                     <div class="explanation-content">${escapeHtml(data.final_explanation).replace(/\n/g, '<br>')}</div>
                 </div>`;
             }
@@ -124,12 +313,11 @@
                 const container = document.getElementById('explanation-content');
                 if (container) {
                     container.innerHTML = renderBlocks(data.parsed_explanation);
-                    // add interaction: arrow chips clickable
                     container.querySelectorAll('.arrow-chip').forEach(chip => {
                         chip.addEventListener('click', () => {
-                            container.querySelectorAll('.arrow-chip').forEach(c=>c.classList.remove('active'));
+                            container.querySelectorAll('.arrow-chip').forEach(c => c.classList.remove('active'));
                             chip.classList.add('active');
-                        })
+                        });
                     });
                 }
             }
@@ -141,9 +329,9 @@
                 if (b.type === 'heading') {
                     out += `<h3>${renderInline(b.inline)}</h3>`;
                 } else if (b.type === 'subheading') {
-                    out += `<h4 style="margin-top:0.25rem;color:#444">${renderInline(b.inline)}</h4>`;
+                    out += `<h4 style="margin-top:0.25rem;color:#555">${renderInline(b.inline)}</h4>`;
                 } else if (b.type === 'paragraph') {
-                    out += `<div class="para">${renderInline(b.inline).replace(/\n/g,'<br>')}</div>`;
+                    out += `<div class="para">${renderInline(b.inline).replace(/\n/g, '<br>')}</div>`;
                 } else if (b.type === 'bullet_list' || b.type === 'ordered_list') {
                     const tag = b.type === 'ordered_list' ? 'ol' : 'ul';
                     out += `<${tag}>`;
@@ -155,7 +343,7 @@
                     out += `<div class="arrow-line">`;
                     b.steps.forEach((step, idx) => {
                         out += `<span class="arrow-chip" data-idx="${idx}">${renderInline(step)}</span>`;
-                        if (idx < b.steps.length-1) out += `<span class="arrow-sep">→</span>`;
+                        if (idx < b.steps.length - 1) out += `<span class="arrow-sep">→</span>`;
                     });
                     out += `</div>`;
                 }

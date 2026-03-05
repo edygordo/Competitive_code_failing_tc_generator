@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+import json
 
 from graph.graph import app as graph_app
 from graph.helpers.explanation_parser import parse_explanation
@@ -41,7 +42,29 @@ def docs_page(request: Request):
 
 @api.post("/analyze")
 def analyze(req: AnalyzeRequest):
-    """Run the graph workflow and return the resulting state."""
+    """Run the graph workflow with Python code validation and return results."""
+    
+    # Validate that both user_code and baseline_code are valid Python
+    validation_error = validate_python_code(req.user_code)
+    if validation_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": f"User code is not valid Python: {validation_error}",
+                "message": "Only Python code debugging is available for now."
+            }
+        )
+    
+    validation_error = validate_python_code(req.baseline_code)
+    if validation_error:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": f"Baseline code is not valid Python: {validation_error}",
+                "message": "Only Python code debugging is available for now."
+            }
+        )
+    
     # convert pydantic model to dict and invoke graph
     raw_state = graph_app.invoke(req.dict())
 
@@ -61,6 +84,20 @@ def analyze(req: AnalyzeRequest):
             state['parsed_explanation'] = []
 
     return JSONResponse(content=state)
+
+
+def validate_python_code(code: str) -> str | None:
+    """
+    Validate if the given code is valid Python.
+    Returns None if valid, otherwise returns error message.
+    """
+    try:
+        compile(code, '<string>', 'exec')
+        return None
+    except SyntaxError as e:
+        return f"Syntax error at line {e.lineno}: {e.msg}"
+    except Exception as e:
+        return f"Compilation error: {str(e)}"
 
 
 # allow simple uvicorn launch via `python api.py`
